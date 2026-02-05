@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kakuro - 8x8 Expert Online Kakuro Logic Puzzle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            font-size: 1.2rem;
+            color: #bdc3c7;
+        }
+
+        .game-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .left-column {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .board-container {
+            flex: 2;
+            min-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Kakuro Board Styles - Exact match to Kakuro Conquest */
+        .board {
+            border-collapse: collapse;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .cellShaded {
+            background: #000 !important;
+            border: 1px solid #000 !important;
+            width: 40px;
+            height: 40px;
+        }
+
+        .cellTotal {
+            background: #000;
+            border: 1px solid #000;
+            width: 40px;
+            height: 40px;
+            position: relative;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        /* .cellTotal::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom right,
+                transparent 49%,
+                #555 49%,
+                #555 51%,
+                transparent 51%
+            );
+        } */
+.cellTotal::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to top right,
+        transparent 49%,
+        #555 49%,
+        #555 51%,
+        transparent 51%
+    );
+}
+        .topNumber, .bottomNumber {
+            position: absolute;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            z-index: 2;
+        }
+
+        .topNumber {
+            top: 2px;
+            right: 4px;
+            color: #3498db; /* Blue for down clues */
+        }
+
+        .bottomNumber {
+            bottom: 2px;
+            left: 4px;
+            color: #e74c3c; /* Red for across clues */
+        }
+
+        .topNumberHelp, .bottomNumberHelp {
+            position: absolute;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        .topNumberHelp {
+            top: 2px;
+            right: 4px;
+            color: #3498db;
+        }
+
+        .bottomNumberHelp {
+            bottom: 2px;
+            left: 4px;
+            color: #e74c3c;
+        }
+
+        .topNumberHelp:hover, .bottomNumberHelp:hover {
+            text-decoration: underline;
+        }
+
+        .cellNumber {
+            background: white;
+            border: 1px solid #ccc;
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .cellNumberInput {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            color: #2c3e50;
+            outline: none;
+        }
+
+        .cellNumberInput:focus {
+            background: #e8f4fc;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .inputbutton {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .inputbutton:hover {
+            background: #2980b9;
+        }
+
+        .checkbutton {
+            background: #2ecc71;
+        }
+
+        .checkbutton:hover {
+            background: #27ae60;
+        }
+
+        .pausebutton {
+            background: #f39c12;
+        }
+
+        .pausebutton:hover {
+            background: #d35400;
+        }
+
+        .text1, .text2 {
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .text1 {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .text2 {
+            color: #7f8c8d;
+        }
+
+        .text2 a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .text2 a:hover {
+            text-decoration: underline;
+        }
+
+        .puzzle-info {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .instructions h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .instructions ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+            padding-left: 10px;
+            position: relative;
+        }
+
+        .instructions li:before {
+            content: "•";
+            color: #3498db;
+            position: absolute;
+            left: -10px;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            border-radius: 8px;
+        }
+
+        .footer h2 {
+            color: #ecf0f1;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .footer a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+            }
+            
+            .left-column, .board-container {
+                min-width: 100%;
+            }
+            
+            .cellShaded, .cellTotal, .cellNumber {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .cellNumberInput {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kakuro</h1>
+            <h2>Free online kakuro puzzles</h2>
+        </div>
+
+        <div class="game-container">
+            <div class="left-column">
+                <div class="text2">
+                    Language: English ▼<br><br>
+                </div>
+                <div class="text2">
+                    Kakuro is like a crossword puzzle with numbers. Each "word" must add up to the number provided in the clue above it or to the left. Words can only use the numbers 1 through 9, and a given number can only be used once in a word. Every kakuro puzzle has one and only solution, and can be solved through logic alone.<br><br>
+                </div>
+                <div class="text2">
+                    Kakuro Hint: Click on a clue number to see possible combinations.<br><br>
+                </div>
+                <div class="text2">
+                    Optimized for: desktop<br><br>
+                </div>
+                <div class="puzzle-info">
+                    <div class="text1">You are playing 8x8 expert puzzle 20088</div>
+                    <div class="text2">Start over, and play another kakuro of this size and difficulty.</div>
+                </div>
+            </div>
+
+            <div class="board-container">
+                <form name="puzzle" autocomplete="off" method="post" action="#" novalidate>
+                <table class="board" cellpadding=0 cellspacing=0 id="CurrentKakuroBoard">
+    <!-- Row 1 - 10 cells -->
+    <tr>
+        <td class="cellShaded"></td>
+        <td class="cellTotal">
+            <div class="topNumber">12</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellTotal">
+            <div class="topNumber">31</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellTotal">
+            <div class="topNumber">8</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellTotal">
+            <div class="topNumber">10</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellShaded"></td>
+        <td class="cellShaded"></td>
+        <td class="cellTotal">
+            <div class="topNumber">3</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellTotal">
+            <div class="topNumber">17</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellTotal">
+            <div class="topNumber">32</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+    </tr>
+    <!-- Row 2 - 10 cells -->
+    <tr>
+        <td class="cellTotal">
+            <div class="topNumber">29</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_2_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_2_2" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_2_3" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_2_4" value="" maxlength="1"></td>
+        <td class="cellShaded"></td>
+        <td class="cellTotal">
+            <div class="topNumber">12</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_2_5" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_2_6" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_2_7" value="" maxlength="1"></td>
+    </tr>
+    <!-- Row 3 - 10 cells -->
+    <tr>
+        <td class="cellTotal">
+            <div class="topNumber">14</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_3_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_3_2" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_3_3" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_3_4" value="" maxlength="1"></td>
+        <td class="cellTotal">
+            <div class="topNumber">&nbsp;</div>
+            <div class="bottomNumber">14</div>
+        </td>
+        <td class="cellTotal">
+            <div class="topNumber">18</div>
+            <div class="bottomNumber">30</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_3_5" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_3_6" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_3_7" value="" maxlength="1"></td>
+    </tr>
+    <!-- Row 4 - 10 cells -->
+    <tr>
+        <td class="cellTotal">
+            <div class="topNumber">7</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_4_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_4_2" value="" maxlength="1"></td>
+        <td class="cellTotal">
+            <div class="topNumber">&nbsp;</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellTotal">
+            <div class="topNumber">13</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_4_3" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_4_4" value="" maxlength="1"></td>
+        <td class="cellTotal">
+            <div class="topNumber">9</div>
+            <div class="bottomNumber">30</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_4_5" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_4_6" value="" maxlength="1"></td>
+    </tr>
+    <!-- Row 5 - 10 cells -->
+    <tr>
+        <td class="cellTotal">
+            <div class="topNumber">9</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_5_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_5_2" value="" maxlength="1"></td>
+        <td class="cellTotal">
+            <div class="topNumber">&nbsp;</div>
+            <div class="bottomNumber">29</div>
+        </td>
+        <td class="cellTotal">
+            <div class="topNumber">28</div>
+            <div class="bottomNumber">16</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_5_3" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_5_4" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_5_5" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_5_6" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_5_7" value="" maxlength="1"></td>
+    </tr>
+    <!-- Row 6 - 10 cells -->
+    <tr>
+        <td class="cellShaded"></td>
+        <td class="cellTotal">
+            <div class="topNumber">44</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_6_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_6_2" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_6_3" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_6_4" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_6_5" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_6_6" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_6_7" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_6_8" value="" maxlength="1"></td>
+    </tr>
+    <!-- Row 7 - 10 cells -->
+    <tr>
+        <td class="cellShaded"></td>
+        <td class="cellTotal">
+            <div class="topNumber">&nbsp;</div>
+            <div class="bottomNumber">33</div>
+        </td>
+        <td class="cellTotal">
+            <div class="topNumber">8</div>
+            <div class="bottomNumber">18</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_7_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_7_2" value="" maxlength="1"></td>
+        <td class="cellTotal">
+            <div class="topNumber">8</div>
+            <div class="bottomNumber">24</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_7_3" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_7_4" value="" maxlength="1"></td>
+        <td class="cellTotal">
+            <div class="topNumber">&nbsp;</div>
+            <div class="bottomNumber">21</div>
+        </td>
+        <td class="cellShaded"></td>
+    </tr>
+    <!-- Row 8 - 10 cells -->
+    <tr>
+        <td class="cellTotal">
+            <div class="topNumber">43</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_8_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_8_2" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_8_3" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_8_4" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_8_5" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_8_6" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_8_7" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_8_8" value="" maxlength="1"></td>
+        <td class="cellTotal">
+            <div class="topNumber">&nbsp;</div>
+            <div class="bottomNumber">26</div>
+        </td>
+    </tr>
+    <!-- Row 9 - 10 cells -->
+    <tr>
+        <td class="cellTotal">
+            <div class="topNumber">30</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_9_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_9_2" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_9_3" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_9_4" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_9_5" value="" maxlength="1"></td>
+        <td class="cellShaded"></td>
+        <td class="cellTotal">
+            <div class="topNumber">9</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_9_6" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_9_7" value="" maxlength="1"></td>
+    </tr>
+    <!-- Row 10 - 10 cells -->
+    <tr>
+        <td class="cellTotal">
+            <div class="topNumber">8</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_10_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_10_2" value="" maxlength="1"></td>
+        <td class="cellTotal">
+            <div class="topNumber">8</div>
+            <div class="bottomNumber">8</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_10_3" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_10_4" value="" maxlength="1"></td>
+        <td class="cellTotal">
+            <div class="topNumber">&nbsp;</div>
+            <div class="bottomNumber">4</div>
+        </td>
+        <td class="cellTotal">
+            <div class="topNumber">3</div>
+            <div class="bottomNumber">10</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_10_5" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_10_6" value="" maxlength="1"></td>
+    </tr>
+    <!-- Row 11 - 10 cells -->
+    <tr>
+        <td class="cellTotal">
+            <div class="topNumber">12</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_11_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_11_2" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_11_3" value="" maxlength="1"></td>
+        <td class="cellShaded"></td>
+        <td class="cellTotal">
+            <div class="topNumber">14</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_11_4" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_11_5" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_11_6" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_11_7" value="" maxlength="1"></td>
+    </tr>
+    <!-- Row 12 - 10 cells -->
+    <tr>
+        <td class="cellTotal">
+            <div class="topNumber">24</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_12_1" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_12_2" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_12_3" value="" maxlength="1"></td>
+        <td class="cellShaded"></td>
+        <td class="cellTotal">
+            <div class="topNumber">26</div>
+            <div class="bottomNumber">&nbsp;</div>
+        </td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_12_4" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_12_5" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_12_6" value="" maxlength="1"></td>
+        <td class="cellNumber"><input class="cellNumberInput" name="cell_12_7" value="" maxlength="1"></td>
+    </tr>
+</table>
+                    <div class="controls">
+                        <button type="button" class="inputbutton checkbutton" onclick="checkSolution()">Check</button>
+                        <button type="button" class="inputbutton pausebutton" onclick="pauseGame()">Pause</button>
+                        <button type="button" class="inputbutton" onclick="clearBoard()">Clear</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>Kakuro Rules</h3>
+            <ul>
+                <li>Fill all white cells with digits 1-9</li>
+                <li>Each "word" (horizontal or vertical run of white cells) must add up to the clue number</li>
+                <li>Digits cannot repeat within a single word</li>
+                <li>Black cells with diagonal slashes contain clue numbers</li>
+                <li>Top-left number = Down sum (vertical word)</li>
+                <li>Bottom-right number = Across sum (horizontal word)</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>© 2007-2025 Hey Good Game, Inc.</p>
+            <p>Also try <a href="#">sudoku</a> and <a href="#">hitori</a></p>
+        </div>
+    </div>
+<!-- 
+    <script>
+        // Game variables
+        let gamePaused = false;
+    
+        // Updated solution array for 12x10 grid
+        let solution = [
+            // Row 1 (input cells start from row 1)
+            [null, null, null, null, null, null, null, null, null, null],
+            // Row 2
+            [null, 7, 9, 5, 8, null, null, 1, 3, 8],
+            // Row 3
+            [null, 4, 5, 3, 2, null, null, 2, 9, 7],
+            // Row 4
+            [null, 0, 7, null, null, 4, 9, null, 0, 9],
+            // Row 5
+            [null, 1, 8, null, null, 7, 8, 9, 1, 3],
+            // Row 6
+            [null, null, 2, 9, 8, 3, 7, 6, 4, 5],
+            // Row 7
+            [null, null, null, 8, 0, null, 0, 8, null, null],
+            // Row 8
+            [null, 4, 1, 5, 3, 8, 6, 7, 9, null],
+            // Row 9
+            [null, 8, 2, 7, 4, 9, null, null, 0, 9],
+            // Row 10
+            [null, 5, 3, null, 1, 7, null, null, 1, 2],
+            // Row 11
+            [null, 7, 5, 0, null, null, 0, 1, 6, 7],
+            // Row 12
+            [null, 9, 7, 8, null, null, 4, 9, 5, 8],
+        ]; -->
+<!-- 
+        // Get cell value
+        function getCellValue(row, col) {
+            const input = document.querySelector(`input[name="cell_${row}_${col}"]`);
+            return input ? parseInt(input.value) || null : null;
+        }
+
+        // Set cell value
+        function setCellValue(row, col, value) {
+            const input = document.querySelector(`input[name="cell_${row}_${col}"]`);
+            if (input) {
+                input.value = value !== null ? value : '';
+            }
+        }
+
+        // Check horizontal run
+        function checkHorizontalRun(startRow, startCol, clue) {
+            let sum = 0;
+            let digits = new Set();
+            let col = startCol;
+            
+            while (col < 9) {
+                const value = getCellValue(startRow, col);
+                if (value === null || value === 0) break;
+                
+                if (digits.has(value)) {
+                    return { valid: false, reason: `Duplicate digit ${value} in horizontal run` };
+                }
+                digits.add(value);
+                sum += value;
+                col++;
+            }
+            
+            if (sum !== clue.value) {
+                return { valid: false, reason: `Sum ${sum} doesn't match clue ${clue.value}` };
+            }
+            
+            return { valid: true };
+        }
+
+        // Check vertical run
+        function checkVerticalRun(startRow, startCol, clue) {
+            let sum = 0;
+            let digits = new Set();
+            let row = startRow;
+            
+            while (row < 9) {
+                const value = getCellValue(row, startCol);
+                if (value === null || value === 0) break;
+                
+                if (digits.has(value)) {
+                    return { valid: false, reason: `Duplicate digit ${value} in vertical run` };
+                }
+                digits.add(value);
+                sum += value;
+                row++;
+            }
+            
+            if (sum !== clue.value) {
+                return { valid: false, reason: `Sum ${sum} doesn't match clue ${clue.value}` };
+            }
+            
+            return { valid: true };
+        }
+
+        // Check all runs
+        function checkAllRuns() {
+            const clues = [
+                // Horizontal clues
+                { type: 'horizontal', row: 1, col: 0, value: 10, length: 2 },
+                { type: 'horizontal', row: 2, col: 0, value: 38, length: 8 },
+                { type: 'horizontal', row: 3, col: 1, value: 24, length: 4 },
+                { type: 'horizontal', row: 4, col: 1, value: 12, length: 2 },
+                { type: 'horizontal', row: 4, col: 5, value: 19, length: 3 },
+                { type: 'horizontal', row: 5, col: 0, value: 18, length: 3 },
+                { type: 'horizontal', row: 6, col: 0, value: 4, length: 2 },
+                { type: 'horizontal', row: 7, col: 0, value: 41, length: 8 },
+                { type: 'horizontal', row: 8, col: 2, value: 18, length: 3 },
+                { type: 'horizontal', row: 8, col: 6, value: 15, length: 2 },
+                
+                // Vertical clues
+                { type: 'vertical', row: 0, col: 1, value: 17, length: 2 },
+                { type: 'vertical', row: 0, col: 2, value: 39, length: 7 },
+                { type: 'vertical', row: 0, col: 4, value: 17, length: 3 },
+                { type: 'vertical', row: 0, col: 5, value: 12, length: 3 },
+                { type: 'vertical', row: 0, col: 6, value: 14, length: 2 },
+                { type: 'vertical', row: 1, col: 3, value: 16, length: 4 },
+                { type: 'vertical', row: 1, col: 7, value: 29, length: 7 },
+                { type: 'vertical', row: 1, col: 8, value: 23, length: 3 },
+                { type: 'vertical', row: 3, col: 6, value: 20, length: 4 },
+                { type: 'vertical', row: 4, col: 1, value: 9, length: 3 },
+                { type: 'vertical', row: 5, col: 4, value: 11, length: 3 },
+                { type: 'vertical', row: 5, col: 5, value: 22, length: 3 },
+                { type: 'vertical', row: 6, col: 8, value: 16, length: 2 }
+            ];
+
+            for (const clue of clues) {
+                let result;
+                if (clue.type === 'horizontal') {
+                    result = checkHorizontalRun(clue.row, clue.col + 1, clue);
+                } else {
+                    result = checkVerticalRun(clue.row + 1, clue.col, clue);
+                }
+                
+                if (!result.valid) {
+                    return result;
+                }
+            }
+            
+            return { valid: true };
+        }
+
+        // Check solution
+        function checkSolution() {
+            if (gamePaused) {
+                alert('Game is paused. Resume to check solution.');
+                return;
+            }
+
+            const result = checkAllRuns();
+            
+            if (result.valid) {
+                // Check if all cells are filled
+                let allFilled = true;
+                for (let row = 1; row <= 8; row++) {
+                    for (let col = 1; col <= 8; col++) {
+                        const cell = document.querySelector(`.cellNumber input[name="cell_${row}_${col}"]`);
+                        if (cell && !cell.value) {
+                            allFilled = false;
+                            break;
+                        }
+                    }
+                    if (!allFilled) break;
+                }
+                
+                if (allFilled) {
+                    alert('Congratulations! Puzzle solved correctly!');
+                } else {
+                    alert('All filled cells are correct, but some cells are still empty.');
+                }
+            } else {
+                alert(`Error: ${result.reason}`);
+            }
+        }
+
+        // Pause game
+        function pauseGame() {
+            gamePaused = !gamePaused;
+            const button = document.querySelector('.pausebutton');
+            button.textContent = gamePaused ? 'Resume' : 'Pause';
+            
+            // Disable/enable inputs
+            const inputs = document.querySelectorAll('.cellNumberInput');
+            inputs.forEach(input => {
+                input.disabled = gamePaused;
+            });
+            
+            alert(gamePaused ? 'Game paused' : 'Game resumed');
+        }
+
+        // Clear board
+        function clearBoard() {
+            if (confirm('Are you sure you want to clear the entire board?')) {
+                const inputs = document.querySelectorAll('.cellNumberInput');
+                inputs.forEach(input => {
+                    input.value = '';
+                });
+            }
+        }
+
+        // Auto-advance to next cell
+        document.querySelectorAll('.cellNumberInput').forEach(input => {
+            input.addEventListener('input', function(e) {
+                if (this.value.length === 1) {
+                    // Find next empty cell
+                    const name = this.name;
+                    const match = name.match(/cell_(\d+)_(\d+)/);
+                    if (match) {
+                        let row = parseInt(match[1]);
+                        let col = parseInt(match[2]);
+                        
+                        // Try next column
+                        let nextInput = document.querySelector(`input[name="cell_${row}_${col + 1}"]`);
+                        if (!nextInput || nextInput.value) {
+                            // Try next row
+                            nextInput = document.querySelector(`input[name="cell_${row + 1}_1"]`);
+                        }
+                        
+                        if (nextInput) {
+                            nextInput.focus();
+                        }
+                    }
+                }
+            });
+            
+            // Allow only numbers 1-9
+            input.addEventListener('keypress', function(e) {
+                if (e.key < '1' || e.key > '9') {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (gamePaused) return;
+            
+            const active = document.activeElement;
+            if (active.classList.contains('cellNumberInput')) {
+                const name = active.name;
+                const match = name.match(/cell_(\d+)_(\d+)/);
+                if (match) {
+                    let row = parseInt(match[1]);
+                    let col = parseInt(match[2]);
+                    
+                    switch(e.key) {
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            const upInput = document.querySelector(`input[name="cell_${row - 1}_${col}"]`);
+                            if (upInput) upInput.focus();
+                            break;
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            const downInput = document.querySelector(`input[name="cell_${row + 1}_${col}"]`);
+                            if (downInput) downInput.focus();
+                            break;
+                        case 'ArrowLeft':
+                            e.preventDefault();
+                            const leftInput = document.querySelector(`input[name="cell_${row}_${col - 1}"]`);
+                            if (leftInput) leftInput.focus();
+                            break;
+                        case 'ArrowRight':
+                            e.preventDefault();
+                            const rightInput = document.querySelector(`input[name="cell_${row}_${col + 1}"]`);
+                            if (rightInput) rightInput.focus();
+                            break;
+                    }
+                }
+            }
+        });
+
+        // Initialize tooltips for clue help
+        document.querySelectorAll('.topNumberHelp, .bottomNumberHelp').forEach(element => {
+            element.addEventListener('click', function() {
+                const clueText = this.textContent;
+                const title = this.getAttribute('title');
+                alert(title || `Clue: ${clueText}`);
+            });
+        });
+    </script> -->
+    <script>
+    // Game variables
+    let gamePaused = false;
+    
+    // CORRECTED solution array for 12x10 grid based on your HTML structure
+    // Note: Your HTML has many issues with duplicate input names and inconsistent cell positions
+    // This solution array assumes we're checking against a proper solution
+    let solution = [
+        // Row 1 (no input cells)
+        [],
+        // Row 2 - cells 1-9 (column indices 1-9)
+        [7, 9, 5, 8, null, null, 1, 3, 8],
+        // Row 3 - cells 1-9
+        [4, 5, 3, 2, null, null, 2, 9, 7],
+        // Row 4 - cells 1-9
+        [0, 7, null, null, 4, 9, null, 0, 9],
+        // Row 5 - cells 1-9
+        [1, 8, null, null, 7, 8, 9, 1, 3],
+        // Row 6 - cells 1-9
+        [null, 2, 9, 8, 3, 7, 6, 4, 5],
+        // Row 7 - cells 1-9
+        [null, null, 8, 0, null, 0, 8, null, null],
+        // Row 8 - cells 1-9
+        [4, 1, 5, 3, 8, 6, 7, 9, null],
+        // Row 9 - cells 1-9
+        [8, 2, 7, 4, 9, null, null, 0, 9],
+        // Row 10 - cells 1-9
+        [5, 3, null, 1, 7, null, null, 1, 2],
+        // Row 11 - cells 1-9
+        [7, 5, 0, null, null, 0, 1, 6, 7],
+        // Row 12 - cells 1-9
+        [9, 7, 8, null, null, 4, 9, 5, 8],
+    ];
+
+    // Get cell value
+    function getCellValue(row, col) {
+        const input = document.querySelector(`input[name="cell_${row}_${col}"]`);
+        return input ? parseInt(input.value) || null : null;
+    }
+
+    // Set cell value
+    function setCellValue(row, col, value) {
+        const input = document.querySelector(`input[name="cell_${row}_${col}"]`);
+        if (input) {
+            input.value = value !== null ? value : '';
+        }
+    }
+
+    // Find next cell in horizontal run
+    function findNextHorizontalCell(row, col) {
+        // Check if next cell exists and is not shaded
+        const nextCell = document.querySelector(`.board tr:nth-child(${row + 1}) td:nth-child(${col + 2})`);
+        if (nextCell && nextCell.classList.contains('cellNumber')) {
+            return { row: row, col: col + 1 };
+        }
+        return null;
+    }
+
+    // Find next cell in vertical run
+    function findNextVerticalCell(row, col) {
+        // Check if cell below exists and is not shaded
+        const nextRow = row + 1;
+        const nextCell = document.querySelector(`.board tr:nth-child(${nextRow + 1}) td:nth-child(${col + 1})`);
+        if (nextCell && nextCell.classList.contains('cellNumber')) {
+            return { row: nextRow, col: col };
+        }
+        return null;
+    }
+
+    // Check horizontal run starting from a clue cell
+    function checkHorizontalRunFromClue(clueRow, clueCol) {
+        let sum = 0;
+        let digits = new Set();
+        let currentRow = clueRow;
+        let currentCol = clueCol + 1; // Start from cell right of the clue
+        
+        // Get the clue value from the bottom number
+        const clueCell = document.querySelector(`.board tr:nth-child(${clueRow + 1}) td:nth-child(${clueCol + 1})`);
+        if (!clueCell || !clueCell.classList.contains('cellTotal')) {
+            return { valid: false, reason: `No clue cell at (${clueRow}, ${clueCol})` };
+        }
+        
+        const bottomNumberDiv = clueCell.querySelector('.bottomNumber');
+        if (!bottomNumberDiv) {
+            return { valid: false, reason: `No across clue at (${clueRow}, ${clueCol})` };
+        }
+        
+        const clueValue = parseInt(bottomNumberDiv.textContent);
+        if (isNaN(clueValue)) {
+            return { valid: true }; // No across clue to check
+        }
+        
+        // Traverse horizontal run
+        while (true) {
+            const cell = document.querySelector(`.board tr:nth-child(${currentRow + 1}) td:nth-child(${currentCol + 1})`);
+            if (!cell || !cell.classList.contains('cellNumber')) {
+                break;
+            }
+            
+            const input = cell.querySelector('input');
+            if (!input) {
+                break;
+            }
+            
+            const value = parseInt(input.value);
+            if (isNaN(value)) {
+                break; // Empty cell, end of run
+            }
+            
+            if (value < 1 || value > 9) {
+                return { valid: false, reason: `Invalid digit ${value} at (${currentRow}, ${currentCol})` };
+            }
+            
+            if (digits.has(value)) {
+                return { valid: false, reason: `Duplicate digit ${value} in horizontal run starting at (${clueRow}, ${clueCol})` };
+            }
+            
+            digits.add(value);
+            sum += value;
+            
+            const next = findNextHorizontalCell(currentRow, currentCol);
+            if (!next) break;
+            
+            currentRow = next.row;
+            currentCol = next.col;
+        }
+        
+        if (sum !== clueValue) {
+            return { valid: false, reason: `Sum ${sum} doesn't match across clue ${clueValue} at (${clueRow}, ${clueCol})` };
+        }
+        
+        return { valid: true };
+    }
+
+    // Check vertical run starting from a clue cell
+    function checkVerticalRunFromClue(clueRow, clueCol) {
+        let sum = 0;
+        let digits = new Set();
+        let currentRow = clueRow + 1; // Start from cell below the clue
+        let currentCol = clueCol;
+        
+        // Get the clue value from the top number
+        const clueCell = document.querySelector(`.board tr:nth-child(${clueRow + 1}) td:nth-child(${clueCol + 1})`);
+        if (!clueCell || !clueCell.classList.contains('cellTotal')) {
+            return { valid: false, reason: `No clue cell at (${clueRow}, ${clueCol})` };
+        }
+        
+        const topNumberDiv = clueCell.querySelector('.topNumber');
+        if (!topNumberDiv) {
+            return { valid: false, reason: `No down clue at (${clueRow}, ${clueCol})` };
+        }
+        
+        const clueValue = parseInt(topNumberDiv.textContent);
+        if (isNaN(clueValue)) {
+            return { valid: true }; // No down clue to check
+        }
+        
+        // Traverse vertical run
+        while (true) {
+            const cell = document.querySelector(`.board tr:nth-child(${currentRow + 1}) td:nth-child(${currentCol + 1})`);
+            if (!cell || !cell.classList.contains('cellNumber')) {
+                break;
+            }
+            
+            const input = cell.querySelector('input');
+            if (!input) {
+                break;
+            }
+            
+            const value = parseInt(input.value);
+            if (isNaN(value)) {
+                break; // Empty cell, end of run
+            }
+            
+            if (value < 1 || value > 9) {
+                return { valid: false, reason: `Invalid digit ${value} at (${currentRow}, ${currentCol})` };
+            }
+            
+            if (digits.has(value)) {
+                return { valid: false, reason: `Duplicate digit ${value} in vertical run starting at (${clueRow}, ${clueCol})` };
+            }
+            
+            digits.add(value);
+            sum += value;
+            
+            const next = findNextVerticalCell(currentRow, currentCol);
+            if (!next) break;
+            
+            currentRow = next.row;
+            currentCol = next.col;
+        }
+        
+        if (sum !== clueValue) {
+            return { valid: false, reason: `Sum ${sum} doesn't match down clue ${clueValue} at (${clueRow}, ${clueCol})` };
+        }
+        
+        return { valid: true };
+    }
+
+    // Check all runs in the grid
+    function checkAllRuns() {
+        // Find all clue cells and check their runs
+        const rows = document.querySelectorAll('.board tr');
+        
+        for (let row = 0; row < rows.length; row++) {
+            const cells = rows[row].querySelectorAll('td');
+            
+            for (let col = 0; col < cells.length; col++) {
+                const cell = cells[col];
+                
+                if (cell.classList.contains('cellTotal')) {
+                    // Check if this cell has a bottom number (across clue)
+                    const bottomNumber = cell.querySelector('.bottomNumber');
+                    if (bottomNumber && bottomNumber.textContent.trim() && !isNaN(parseInt(bottomNumber.textContent))) {
+                        const result = checkHorizontalRunFromClue(row, col);
+                        if (!result.valid) {
+                            return result;
+                        }
+                    }
+                    
+                    // Check if this cell has a top number (down clue)
+                    const topNumber = cell.querySelector('.topNumber');
+                    if (topNumber && topNumber.textContent.trim() && !isNaN(parseInt(topNumber.textContent))) {
+                        const result = checkVerticalRunFromClue(row, col);
+                        if (!result.valid) {
+                            return result;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return { valid: true };
+    }
+
+    // Check solution against predefined solution array
+    function checkAgainstSolution() {
+        for (let row = 1; row <= 11; row++) {
+            for (let col = 1; col <= 9; col++) {
+                const expected = solution[row] ? solution[row][col - 1] : null;
+                if (expected !== null && expected !== 0) {
+                    const actual = getCellValue(row, col);
+                    if (actual !== expected) {
+                        return { 
+                            valid: false, 
+                            reason: `Cell (${row}, ${col}) should be ${expected} but is ${actual || 'empty'}` 
+                        };
+                    }
+                }
+            }
+        }
+        return { valid: true };
+    }
+
+    // Check solution - combined logic
+    function checkSolution() {
+        if (gamePaused) {
+            alert('Game is paused. Resume to check solution.');
+            return;
+        }
+
+        // First check all runs
+        const runResult = checkAllRuns();
+        if (!runResult.valid) {
+            alert(`Error: ${runResult.reason}`);
+            return;
+        }
+
+        // Then check against solution
+        const solutionResult = checkAgainstSolution();
+        if (!solutionResult.valid) {
+            alert(`Incorrect: ${solutionResult.reason}`);
+            return;
+        }
+
+        // Check if all cells are filled
+        let allFilled = true;
+        const inputs = document.querySelectorAll('.cellNumberInput');
+        for (const input of inputs) {
+            if (!input.value) {
+                allFilled = false;
+                break;
+            }
+        }
+        
+        if (allFilled) {
+            alert('Congratulations! Puzzle solved correctly!');
+        } else {
+            alert('All filled cells are correct, but some cells are still empty.');
+        }
+    }
+
+    // Pause game
+    function pauseGame() {
+        gamePaused = !gamePaused;
+        const button = document.querySelector('.pausebutton');
+        button.textContent = gamePaused ? 'Resume' : 'Pause';
+        
+        // Disable/enable inputs
+        const inputs = document.querySelectorAll('.cellNumberInput');
+        inputs.forEach(input => {
+            input.disabled = gamePaused;
+        });
+        
+        alert(gamePaused ? 'Game paused' : 'Game resumed');
+    }
+
+    // Clear board
+    function clearBoard() {
+        if (confirm('Are you sure you want to clear the entire board?')) {
+            const inputs = document.querySelectorAll('.cellNumberInput');
+            inputs.forEach(input => {
+                input.value = '';
+            });
+        }
+    }
+
+    // Fix input names first (this should be done in HTML, but we'll handle it here)
+    function fixInputNames() {
+        // This is a temporary fix for the duplicate input names
+        const inputs = document.querySelectorAll('.cellNumberInput');
+        let nameCounter = {};
+        
+        inputs.forEach((input, index) => {
+            const row = Math.floor(index / 10) + 1;
+            const col = (index % 10) + 1;
+            const newName = `cell_${row}_${col}`;
+            input.name = newName;
+        });
+    }
+
+    // Auto-advance to next cell
+    document.querySelectorAll('.cellNumberInput').forEach(input => {
+        input.addEventListener('input', function(e) {
+            if (this.value.length === 1) {
+                // Find next empty cell
+                const name = this.name;
+                const match = name.match(/cell_(\d+)_(\d+)/);
+                if (match) {
+                    let row = parseInt(match[1]);
+                    let col = parseInt(match[2]);
+                    
+                    // Try next column
+                    let nextInput = document.querySelector(`input[name="cell_${row}_${col + 1}"]`);
+                    if (!nextInput || nextInput.value) {
+                        // Try next row, first column
+                        nextInput = document.querySelector(`input[name="cell_${row + 1}_1"]`);
+                    }
+                    
+                    if (nextInput) {
+                        nextInput.focus();
+                    }
+                }
+            }
+        });
+        
+        // Allow only numbers 1-9
+        input.addEventListener('keypress', function(e) {
+            if (e.key < '1' || e.key > '9') {
+                e.preventDefault();
+            }
+        });
+    });
+
+    // Add keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (gamePaused) return;
+        
+        const active = document.activeElement;
+        if (active.classList.contains('cellNumberInput')) {
+            const name = active.name;
+            const match = name.match(/cell_(\d+)_(\d+)/);
+            if (match) {
+                let row = parseInt(match[1]);
+                let col = parseInt(match[2]);
+                
+                switch(e.key) {
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        const upInput = document.querySelector(`input[name="cell_${row - 1}_${col}"]`);
+                        if (upInput) upInput.focus();
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        const downInput = document.querySelector(`input[name="cell_${row + 1}_${col}"]`);
+                        if (downInput) downInput.focus();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        const leftInput = document.querySelector(`input[name="cell_${row}_${col - 1}"]`);
+                        if (leftInput) leftInput.focus();
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        const rightInput = document.querySelector(`input[name="cell_${row}_${col + 1}"]`);
+                        if (rightInput) rightInput.focus();
+                        break;
+                }
+            }
+        }
+    });
+
+    // Initialize tooltips for clue help
+    document.querySelectorAll('.topNumber, .bottomNumber').forEach(element => {
+        element.addEventListener('click', function() {
+            const clueText = this.textContent;
+            const isTop = this.classList.contains('topNumber');
+            const type = isTop ? 'Down' : 'Across';
+            alert(`${type} clue: ${clueText}`);
+        });
+    });
+
+    // Fix input names on load
+    document.addEventListener('DOMContentLoaded', fixInputNames);
+</script>
+</body>
+</html>
